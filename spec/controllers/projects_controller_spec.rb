@@ -39,6 +39,107 @@ RSpec.describe ProjectsController, type: :controller do
     end
   end
 
+  describe "#new" do
+    # 認証済みのユーザーとして
+    context "as an authenticated user" do
+      before do
+        @user = FactoryBot.create(:user)
+        sign_in @user
+      end
+
+      # 正常にレスポンスを返すこと
+      it "responds successfully" do
+        get :new
+        expect(response).to be_successful
+      end
+
+      # 200レスポンスを返すこと
+      it "returns a 200 response" do
+        get :new
+        expect(response).to have_http_status "200"
+      end
+    end
+
+    # ゲストとして
+    context "as a guest" do
+      # 302レスポンスを返すこと
+      it "returns a 302 response" do
+        get :new
+        expect(response).to have_http_status "302"
+      end
+
+      # サインイン画面にリダイレクトすること
+      it "redirects to the sign-in page" do
+        get :new
+        expect(response).to redirect_to "/users/sign_in"
+      end
+    end
+  end
+
+  describe "#edit" do
+    # 認証済みのユーザーとして
+    context "as an authenticated user" do
+      before do
+        @user = FactoryBot.create(:user)
+        @project = FactoryBot.create(:project, owner: @user)
+        sign_in @user
+      end
+
+      # 正常にレスポンスを返すこと
+      it "responds successfully" do
+        get :edit, params: { id: @project.id }
+        expect(response).to be_successful
+      end
+
+      # 200レスポンスを返すこと
+      it "returns a 200 response" do
+        get :edit, params: { id: @project.id }
+        expect(response).to have_http_status "200"
+      end
+    end
+
+    # 認可されていないユーザーとして
+    context "as an unauthorized user" do
+      before do
+        @user = FactoryBot.create(:user)
+        other_user = FactoryBot.create(:user)
+        @project = FactoryBot.create(:project, owner: other_user)
+        sign_in @user
+      end
+
+      # プロジェクトを編集できないこと
+      it "does not allow editing the project" do
+        get :edit, params: { id: @project.id }
+        expect(response).to redirect_to root_path
+      end
+    end
+
+    # ゲストとして
+    context "as a guest" do
+      before do
+        @project = FactoryBot.create(:project)
+      end
+
+      # 302レスポンスを返すこと
+      it "returns a 302 response" do
+        get :edit, params: { id: @project.id }
+        expect(response).to have_http_status "302"
+      end
+
+      # サインイン画面にリダイレクトすること
+      it "redirects to the sign-in page" do
+        get :edit, params: { id: @project.id }
+        expect(response).to redirect_to "/users/sign_in"
+      end
+
+      # プロジェクトを編集できないこと
+      it "does not allow editing the project" do
+        get :edit, params: { id: @project.id }
+        expect(response).to redirect_to "/users/sign_in"
+      end
+    end
+  end
+
   describe "#show" do
     # 認可されたユーザーとして
     context "as an authorized user" do
