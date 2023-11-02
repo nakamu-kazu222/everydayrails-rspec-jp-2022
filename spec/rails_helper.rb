@@ -74,3 +74,8 @@ Shoulda::Matchers.configure do |config|
     with.library :rails
   end
 end
+
+# テストスイートの実行が終わったらアップロードされたファイルを削除する
+config.after(:suite) do
+  FileUtils.rm_rf(ActiveStorage::Blob.service.root)
+end
